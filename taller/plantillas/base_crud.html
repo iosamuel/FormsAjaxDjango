@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block titulo %}{% endblock titulo %}
+
+{% block js %}
+	<script type="text/javascript">
+		$('#formulario').bind('submit', function(e){
+			e.preventDefault();
+			var accion = $('#formulario').find('input[type=submit]').val();
+			var url = accion == 'Grabar' ? '/add_user_ajax/' : '/editar_ajax/';
+
+			var fd = new FormData($('#formulario').get(0));
+			if (accion == 'Terminar'){
+				var id_usuario = location.href.substr(location.href.lastIndexOf('/')+1);
+				fd.append('id_usuario', id_usuario);
+			}
+			$.ajax({
+				url: url,
+				data: fd,
+				type: 'POST',
+				success: function(data){
+					if (data.exito){
+						$("#resultados").html('<span class="alert alert-success">Creado exitosamente!</span>');
+						if (accion == 'Grabar'){
+							$('#formulario').get(0).reset();
+						}
+					} else {
+						$('#resultados').html('');
+						if (data.errores.nombre){
+							$('<span class="alert alert-error"><b>Nombre</b> '+data.errores.nombre+'</span>').appendTo('#resultados');
+						}
+						if (data.errores.apellidos){
+							$('<span class="alert alert-error"><b>Apellidos</b> '+data.errores.apellidos+'</span>').appendTo('#resultados');
+						}
+						if (data.errores.edad){
+							$('<span class="alert alert-error"><b>Edad</b> '+data.errores.edad+'</span>').appendTo('#resultados');
+						}
+						if (data.errores.imagen){
+							$('<span class="alert alert-error"><b>Imagen</b> '+data.errores.imagen+'</span>').appendTo('#resultados');
+						}
+					}
+				}, 
+				processData: false,
+				contentType: false
+			});
+		});
+	</script>
+{% endblock js %}
+
+{% block contenido %}
+<form method="post" id="formulario" enctype="multipart/form-data">{% csrf_token %}
+	{{ formulario.as_p }}
+	<input type="submit" value="{% block valor %}{% endblock valor %}" class="btn btn-primary">
+</form>
+<div id="resultados"></div>
+{% endblock contenido %}
